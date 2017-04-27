@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script language="javascript" type="text/javascript" src="../js/jquery-1.11.1.js"></script>
+<script type="text/javascript">
+	$(function() {
+		$("#newclick").click(function() {
+			$(".li").append('<li>动态添加的HTML元素click<button class="deleteclick">Delete</button></li>');
+		});
+
+		$("#newon").click(function() {
+			$(".li").append('<li>动态添加的HTML元素on<button class="deleteon">Delete</button></li>');
+		});
+
+		$(".delete").click(function() {
+			$(this).parent().remove();
+		});
+
+		$(".li").on('click', ".deleteon", function() {
+			$(this).parent().remove();
+		})
+
+		$(".deleteclick").click(function() {
+			$(this).parent().remove();
+		});
+	});
+</script>
+</head>
+<body>
+	<div>
+		<h1>展示jQuery中on()和click()的区别</h1>
+	</div>
+	<div>
+		<span>点击生成新按钮。NewOn生成的Delete按钮行为用on()实现，NewClick生成的Delete按钮行为用click()实现。</span>
+	</div>
+	<div class="test">
+		<button class="new" id="newon">NewOn</button>
+		<button class="new" id="newclick">NewClick</button>
+		<ul class="li">
+			<li>原先的HTML元素on
+				<button class="delete">Delete</button>
+			</li>
+			<li>原先的HTML元素click
+				<button class="delete">Delete</button>
+			</li>
+		</ul>
+	</div>
+</body>
+<script src="/static/js/jquery-3.1.1.min.js"></script>
+<script src="/static/js/test.js"></script>
+</html>

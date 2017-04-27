@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="wxw.dao.AdminDao">
+
+	<select id="findByPage" parameterType="wxw.model.page.Page"
+		resultMap="adminMap">
+		select * from admin_info
+		where admin_id in (
+			select ai.admin_id from admin_info ai
+			left join admin_role ar on ai.admin_id=ar.admin_id
+			left join role_info ri on ri.role_id=ar.role_id
+			left join role_module rm on rm.role_id=ri.role_id
+			<where>
+				<if test="roleName!=null &amp;&amp; roleName.length()>0">
+					and ri.name like concat('%',#{roleName},'%')
+				</if>
+				<if test="moduleId!=null">
+					and rm.module_id=#{moduleId}
+				</if>
+			</where>
+			)
+		order by admin_id
+		limit #{begin},#{rowsPerPage}
+	</select>
+	<select id="selectRoles" parameterType="int" resultType="wxw.model.base.Role">
+		select * from role_info 
+		where role_id in (
+			select role_id from admin_role
+			where admin_id=#{id}
+		)
+	</select>
+	<resultMap id="adminMap" type="wxw.model.base.Admin">
+		<id column="admin_id" property="admin_id" />
+		<collection javaType="arraylist" ofType="wxw.model.base.Role"
+			property="roles" column="admin_id" select="selectRoles">
+		</collection>
+	</resultMap>
+
+	<select id="findRows" parameterType="wxw.model.page.Page"
+		resultType="int">
+		select count(*) from admin_info
+		where admin_id in (
+			select ai.admin_id from admin_info ai
+			left join admin_role ar on ai.admin_id=ar.admin_id
+			left join role_info ri on ri.role_id=ar.role_id
+			left join role_module rm on rm.role_id=ri.role_id
+			<where>
+				<if test="roleName!=null &amp;&amp; roleName.length()>0">
+					and ri.name like concat('%',#{roleName},'%')
+				</if>
+				<if test="moduleId!=null">
+					and rm.module_id=#{moduleId}
+				</if>
+			</where>
+			)
+	</select>
+	
+	<update id="updatePassword" parameterType="hashMap">
+		update admin_info set password=#{defaultPassword}
+		where admin_id in
+			<foreach collection="ids" open="(" close=")" separator=","
+				item="id">#{id}
+			</foreach>
+	</update>
+	
+	<insert id="saveAdmin" parameterType="wxw.model.base.Admin" 
+		useGeneratedKeys="true" keyProperty="admin_id">
+		insert into admin_info values(
+			null,
+			#{admin_code,jdbcType=VARCHAR},
+			#{password,jdbcType=VARCHAR},
+			#{name,jdbcType=VARCHAR},
+			#{telephone,jdbcType=VARCHAR},
+			#{email,jdbcType=VARCHAR},
+			#{enrolldate,jdbcType=TIMESTAMP},
+			#{token,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<insert id="saveAdminRoles" parameterType="hashMap">
+		insert into admin_role values(
+			#{admin_id,jdbcType=NUMERIC},
+			#{role_id,jdbcType=NUMERIC}
+		)
+	</insert>
+
+	<select id="findByCode" parameterType="string" resultType="wxw.model.base.Admin">
+		select * from admin_info
+		where admin_code=#{adminCode,jdbcType=VARCHAR}
+	</select>
+	
+	<select id="findById" parameterType="int" resultMap="adminMap">
+		select * from admin_info 
+		where admin_id=#{id}
+	</select>
+	
+	<update id="updateAdmin" parameterType="wxw.model.base.Admin">
+		update admin_info set 
+			name=#{name,jdbcType=VARCHAR},
+			telephone=#{telephone,jdbcType=VARCHAR},
+			email=#{email,jdbcType=VARCHAR}
+		where admin_id=#{admin_id}
+	</update>
+	
+	<delete id="deleteAdminRoles" parameterType="int">
+		delete from admin_role 
+		where admin_id=#{admin_id}
+	</delete>
+	
+	<delete id="deleteAdmin" parameterType="int">
+		delete from admin_info 
+		where admin_id=#{id}
+	</delete>
+
+	<update id="updateToken" parameterType="wxw.model.base.Admin">
+		update admin_info set token=#{token}
+		where admin_id=#{admin_id}
+	</update>
+
+	<select id="findModulesByAdmin" parameterType="int"
+		resultType="wxw.model.base.Module">
+		select * from module_info 
+		where module_id in (
+			select rm.module_id from admin_role ar
+			inner join role_info ri on ri.role_id=ar.role_id
+			inner join role_module rm on rm.role_id=ri.role_id
+			where ar.admin_id=#{adminId}
+		) order by module_id
+	</select>
+	
+</mapper>

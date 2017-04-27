@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="wxw.dao.RoleDao">
+
+	<!-- 一对多关联映射：主键字段必须显式装配，不能省略 -->
+	<select id="findByPage" parameterType="wxw.model.page.Page"
+		resultMap="roleMap">
+		select * from role_info
+		order by role_id
+		limit #{begin},#{rowsPerPage}
+	</select>
+	<select id="selectModules" parameterType="int" resultType="wxw.model.base.Module">
+		select * from module_info 
+		where module_id in (
+			select module_id from role_module
+			where role_id=#{role_id}
+		)
+	</select>
+	<resultMap id="roleMap" type="wxw.model.base.Role">
+		<id column="role_id" property="role_id" />
+		<collection javaType="arraylist" ofType="wxw.model.base.Module"
+			property="modules" column="role_id" select="selectModules">
+		</collection>
+	</resultMap>
+
+	<select id="findRows" parameterType="wxw.model.page.Page"
+		resultType="int">
+		select count(*) from role_info
+	</select>
+
+	<select id="findAllModules" resultType="wxw.model.base.Module">
+		select * from module_info
+	</select>
+
+	<!-- 主键映射 实体类得到role_id -->
+	<insert id="saveRole" parameterType="wxw.model.base.Role"
+		useGeneratedKeys="true" keyProperty="role_id">
+		insert into role_info values(
+			null,
+			#{name,jdbcType=VARCHAR}
+		)
+	</insert>
+
+	<insert id="saveRoleModules" parameterType="hashmap">
+		insert into role_module values(
+			#{role_id,jdbcType=NUMERIC},
+			#{module_id,jdbcType=NUMERIC}
+		)
+	</insert>
+
+	<select id="findByName" parameterType="string" resultMap="roleMap">
+		select * from role_info 
+		where name=#{name,jdbcType=VARCHAR}
+	</select>
+
+	<select id="findById" parameterType="int" resultMap="roleMap">
+		select * from role_info 
+		where role_id=#{id}
+	</select>
+	
+	<update id="updateRole" parameterType="wxw.model.base.Role">
+		update role_info set name=#{name,jdbcType=VARCHAR} 
+		where role_id=#{role_id}
+	</update>
+
+	<delete id="deleteRoleModules" parameterType="int">
+		delete from role_module 
+		where role_id=#{roleId}
+	</delete>
+
+	<delete id="deleteRole" parameterType="int">
+		delete from role_info
+		where role_id=#{roleId}
+	</delete>
+
+</mapper>
