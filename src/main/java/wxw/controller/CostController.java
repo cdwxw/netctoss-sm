@@ -17,12 +17,21 @@ import wxw.util.JsonResult;
 
 @Controller
 @RequestMapping("/cost")
-// 1、将变量放入session；2、方法调用时匹配传参
+// ②将ModelMap中属性名为costPage的属性放到Session属性列表中，以便这个属性可以跨请求访问
 @SessionAttributes("costPage")
 public class CostController extends BaseController {
 
 	@Resource
 	private CostService costService;
+
+	@RequestMapping("/findCost.do")
+	public String find(CostPage page, Model model) {
+		JsonResult<List<Cost>> json = costService.findByPage(page);
+		model.addAttribute("costs", json.getData());
+		// ①向ModelMap中添加一个属性
+		model.addAttribute("costPage", page);
+		return "cost/cost_list";
+	}
 
 	// @RequestMapping("/findCost.do")
 	// public String find(Model model) {
@@ -59,15 +68,6 @@ public class CostController extends BaseController {
 	public String delete(@RequestParam("cost_id") int id, Model model) {
 		costService.delete(id);
 		return "redirect:findCost.do";
-	}
-
-	@RequestMapping("/findCost.do")
-	// 其他请求重定向findCost.do二次调用page参数时@SessionAttributes匹配传参（类型名"CostPage"=session中变量名）
-	public String find(CostPage page, Model model) {
-		JsonResult<List<Cost>> json = costService.findByPage(page);
-		model.addAttribute("costs", json.getData());
-		model.addAttribute("costPage", page);// @SessionAttributes将变量costPage放入session
-		return "cost/cost_list";
 	}
 
 }
